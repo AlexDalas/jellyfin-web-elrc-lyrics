@@ -58,6 +58,9 @@ export default function (view) {
         if (lyric) {
             lyric.classList.remove('futureLyric');
             lyric.classList.add('pastLyric');
+            if (savedLyrics[line].TimeTags != null) {
+                lyric.innerHTML = savedLyrics[line].Text;
+            }
         }
     }
 
@@ -66,7 +69,30 @@ export default function (view) {
         if (lyric) {
             lyric.classList.remove('pastLyric');
             lyric.classList.add('futureLyric');
+            if (savedLyrics[line].TimeTags != null) {
+                lyric.innerHTML = savedLyrics[line].Text;
+            }
         }
+    }
+
+    function highlightWords(line, numWords, text) {
+        const textContainer = document.getElementById(`lyricPosition${line}`);
+
+        if (numWords == null){
+            return textContainer.innerHTML = text;
+        }
+
+        const words = text.split('');
+
+        const wordsToHighlight = words.slice(0, numWords).join('');
+        const remainingWords = words.slice(numWords).join('');
+
+        textContainer.innerHTML = `${wordsToHighlight} <span class="futureLyric">${remainingWords}</span>`;
+    }
+
+    function getNextTime(currentTime, timeTags) {
+        const nextTimeEntry = Object.entries(timeTags).find(([key, value]) => value > currentTime);
+        return nextTimeEntry ? Number(nextTimeEntry[0]) : null;
     }
 
     function setCurrentLyricClassOnLine(line) {
@@ -74,6 +100,13 @@ export default function (view) {
         if (lyric) {
             lyric.classList.remove('pastLyric');
             lyric.classList.remove('futureLyric');
+
+            // If there are TimeTags, then show those words.
+            if (savedLyrics[line].TimeTags != null) {
+                var getChange = getNextTime((getCurrentPlayTime()/10000), savedLyrics[line].TimeTags);
+                highlightWords(line, getChange, savedLyrics[line].Text);
+            }
+
             if (autoScroll !== AutoScroll.NoScroll) {
                 // instant scroll is used when the view is first loaded
                 scrollManager.scrollToElement(lyric, autoScroll === AutoScroll.Smooth);
